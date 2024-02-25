@@ -29,7 +29,47 @@ void Game::setupSystem()
 
 void Game::initialize()
 {
+	m_shipFireCooldownTime = 0.0;
+	m_alientAmplitudeTime = 0.0;
 
+	// Load level
+	for (int r = 0; r < levelRows; r++)
+	{
+		for (int c = 0; c < levelColumns; c++)
+		{
+			unsigned char cellSymbol = levelData0[r][c];
+
+			switch (cellSymbol)
+			{
+					// Create Ship
+				case CellSymbol_Ship:
+				{
+					createObject(GameObjectType_Ship,
+						(c + 0.5),
+						r,
+						GetRenderCellSymbol( cellSymbol ),
+						GetRenderCellSymbolColor( cellSymbol ),
+						GetRenderCellSymboBackgroundlColor( cellSymbol ) );
+					break;
+				}
+
+				// Create Alien
+				case CellSymbol_Alien:
+				{
+					GameObject* alien = createObject( GameObjectType_Alien,
+													  (c + 0.5),
+													  r,
+													  GetRenderCellSymbol( cellSymbol ),
+													  GetRenderCellSymbolColor( cellSymbol ),
+													  GetRenderCellSymboBackgroundlColor( cellSymbol ) );
+					alien->setXSpeed( alienAmplitude * cos( m_alientAmplitudeTime ) );
+					alien->setYSpeed(alienSpeed);
+					break;
+				}
+
+			}
+		}
+	}
 }
 
 bool Game::frame()
@@ -71,7 +111,6 @@ void Game::render()
 		}
 
 	// Draw objects count
-	//
 	char buff[64];
 	sprintf_s(buff, "Objs: %d", objectCount);
 	m_renderSystem.drawText(0, 0, buff, ConsoleColor_Gray, ConsoleColor_Black);
@@ -120,5 +159,109 @@ void Game::destroyObject(GameObject* object)
 
 void Game::update(float dt)
 {
+	bool haveAliveAliens = false;
 
+	// Update all game objects
+	for (int i = 0; i < gameObjectCountMax; i++)
+	{
+		GameObject* object = m_objects[i];
+
+		if (object != 0)
+		{
+			object->update(dt);
+			switch (object->getType())
+			{
+				// Hero ship
+				case GameObjectType_Ship:
+				{
+					// Borders
+					if (object->getX() < 0)
+						object->setX(0);
+					else
+						if (object->getX() > screenColumns - 1)
+							object->setX(screenColumns - 1);
+
+					// Move
+					if (IsKeyDown(VK_LEFT))
+						object->setXSpeed(-shipSpeed);
+					else
+					if (IsKeyDown(VK_RIGHT))
+						object->setXSpeed(shipSpeed);
+					else
+						object->setXSpeed( 0.0 );
+
+					// Fire
+					if (IsKeyDown(VK_SPACE))
+					{
+						if (m_shipFireCooldownTime <= 0.0)
+						{
+							m_shipFireCooldownTime = shipFireCooldown;
+
+							// Create bullet
+							GameObject* bullet = createObject(	GameObjectType_Bullet,
+																object->getX(),
+																object->getY() - 1,
+																GetRenderCellSymbol(CellSymbol_Bullet),
+																GetRenderCellSymbolColor(CellSymbol_Bullet),
+																GetRenderCellSymboBackgroundlColor(CellSymbol_Bullet) );
+							bullet->setYSpeed( -bulletSpeed );
+						}
+					}
+					break;
+				}
+
+				// Bullet
+				case GameObjectType_Bullet:
+				{
+					if (object->getY() < 0)
+					{
+						destroyObject(object);
+					}
+					else
+					{
+						for (int e = 0; e < gameObjectCountMax; e++)
+						{
+							GameObject* anotherObject = m_objects[e];
+							if (anotherObject != 0)
+							{
+								if (anotherObject->getType() == GameObjectType_Alien)
+								{
+									if (anotherObject->intersects(object))
+									{
+										destroyObject(anotherObject);
+										destroyObject(object);
+										break;
+									}
+								}
+							}
+						}
+					}
+					break;
+				}
+
+				// Alien ship
+				case GameObjectType_Alien:
+				{
+					haveAliveAliens = true;
+					
+					if (object->getY() >= screenRows)
+						m_isGameActive = false;
+					else
+						object->setXSpeed( alienAmplitude * cos(m_alientAmplitudeTime ) );
+					break;
+				}
+			}
+		}
+	}
+
+	// Ship cooldown time
+	if (m_shipFireCooldownTime > 0.0)
+		m_shipFireCooldownTime -= dt;
+
+	// Alien amplitude time
+	m_alientAmplitudeTime += dt;
+
+	// Victory 
+	if (!haveAliveAliens)
+		m_isGameActive = false;
 }

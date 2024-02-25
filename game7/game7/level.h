@@ -56,7 +56,7 @@ const unsigned char levelData0[levelRows][levelColumns + 1] =
 
 ////////////////////////////////////////////////////////////
 // Functions
-unsigned char GetRenderSymbol(unsigned char cellSymbol)
+unsigned char GetRenderCellSymbol(unsigned char cellSymbol)
 {
 	switch (cellSymbol)
 	{
@@ -71,7 +71,18 @@ ConsoleColor GetRenderCellSymbolColor(unsigned char cellSymbol)
 {
 	switch ( cellSymbol)
 	{
-		case CellSymbol_Ship:		return ConsoleColor_DarkGray;
+		case CellSymbol_Ship:		return ConsoleColor_White;
+		case CellSymbol_Bullet:		return ConsoleColor_Red;
+		case CellSymbol_Alien:		return ConsoleColor_Green;
+	}
+	return ConsoleColor_Black;
+}
+
+ConsoleColor GetRenderCellSymboBackgroundlColor(unsigned char cellSymbol)
+{
+	switch (cellSymbol)
+	{
+	case CellSymbol_Ship:		return ConsoleColor_DarkGray;
 	}
 	return ConsoleColor_Black;
 }

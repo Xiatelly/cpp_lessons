@@ -13,7 +13,7 @@ RenderSystem::RenderSystem()
 	{
 		for (int c = 0; c < screenColumns; c++)
 		{
-			m_backBuffer[r][c].symbol = 0;
+			m_backBuffer[r][c].symbol = ' ';
 			m_backBuffer[r][c].symbolColor = ConsoleColor_Gray;
 			m_backBuffer[r][c].backgroundColor = ConsoleColor_Black;
 
@@ -40,7 +40,7 @@ void RenderSystem::clear()
 	{
 		for ( int c = 0; c < screenColumns; c++ )
 		{
-			m_backBuffer[r][c].symbol = 0;
+			m_backBuffer[r][c].symbol = ' ';
 			m_backBuffer[r][c].backgroundColor = ConsoleColor_Black;
 		}
 	}
@@ -63,7 +63,7 @@ void RenderSystem::drawText(int r, int c, const char* text, ConsoleColor symbolC
 
 	while (symbol != 0) 
 	{
-		drawChar(r, column, symbolColor, backgroundColor);
+		drawChar(r, column, symbol, symbolColor, backgroundColor);
 
 		text++;
 		column++;
@@ -81,17 +81,17 @@ void RenderSystem::flush()
 		{
 			if(		( m_backBuffer[r][c].symbol				!= m_screenBuffer[r][c].symbol)
 				 || ( m_backBuffer[r][c].symbolColor		!= m_screenBuffer[r][c].symbolColor)
-				 || (m_backBuffer[r][c].backgroundColor		!= m_screenBuffer[r][c].backgroundColor))
+				 || ( m_backBuffer[r][c].backgroundColor	!= m_screenBuffer[r][c].backgroundColor))
 			{
 				// Copy symbol data from back to screen buffer
 				m_screenBuffer[r][c] = m_backBuffer[r][c];
 
-					// Draw symbol in (r,c) position
-					setConsoleCursor(r, c);
-					setConsoleColor(m_screenBuffer[r][c].symbolColor, m_screenBuffer[r][c].backgroundColor);
-					printf("%c", m_screenBuffer[r][c]);
+				// Draw symbol in (r,c) position
+				setConsoleCursor(r, c);
+				setConsoleColor(m_screenBuffer[r][c].symbolColor, m_screenBuffer[r][c].backgroundColor);
+				printf("%c", m_screenBuffer[r][c]);
 
-					screenBufferModified = true;
+				screenBufferModified = true;
 			}
 		}
 	}
